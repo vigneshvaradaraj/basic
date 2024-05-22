@@ -34,6 +34,8 @@ int main(int num,char* str[])
 
         for(n = 0;n<2;n++)
         free(ptr[n]);
+	
+	
     }
     return 0;
 }
