@@ -58,23 +58,23 @@ void config_clock()
 
 void gpio_init()
 {
-	//1) ENABLE GPIOA CLK
+	//1) ENABLE GPIOG CLK
 	RCC->AHB1ENR |= (1 << 6);
 	//2) SET PIN AS OUTPUT
-	GPIOG->MODER |= (1 << 26);//PA5
+	GPIOG->MODER |= (1 << 26);
 	//3) CONFIG THE OP MODE
 	GPIOG->OTYPER = 0;
 	GPIOG->OSPEEDR = 0;
 }
 
-void set_pa5(void)
+void set(void)
 {
-	GPIOG->BSRR |= (1<<13);//SET THE PIN PA5
+	GPIOG->BSRR |= (1<<13);//SET THE PIN 
 }
 
-void clear_pa5(void)
+void clear(void)
 {
-	GPIOG->BSRR |= ((1<<13)<<16);//REST PIN PA5
+	GPIOG->BSRR |= ((1<<13)<<16);//REST PIN 
 }
 
 void delay(void)
@@ -92,9 +92,9 @@ int main(void)
 
 	for(;;)
 	{
-		set_pa5();
+		set();
 		delay();
-		clear_pa5();
+		clear();
 		delay();
 	}
 }
