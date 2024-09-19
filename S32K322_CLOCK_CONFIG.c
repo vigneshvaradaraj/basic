@@ -39,4 +39,13 @@ void config_clock(void)
 	//8) Write 1 to PLLODIV_n[DE].
 	PLL->PLLODIV[0] = (1 << 31);//DE
 	PLL->PLLODIV[1] = (1 << 31);//DE
+	
+	//MUX_0_CSC & MUX_0_CSS
+	MC_CGM->MUX_0_CSC = 0;
+	MC_CGM->MUX_0_CSC |= (0x8 << 24);//selecting PLL_PHI0_CLK
+	while(!(((MC_CGM->MUX_0_CSS >> 17) & 0x7) == 1));//SWTRG Switch after request succeeded
+	while(!(((MC_CGM->MUX_0_CSS >> 24) & 0xf) == 0x8));//PLL_PHI0_CLK clock has selected to perpheral buses
+	
+	//Peripheral devider aips_flat_clk
+	
 }
