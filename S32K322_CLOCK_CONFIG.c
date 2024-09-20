@@ -46,6 +46,25 @@ void config_clock(void)
 	while(!(((MC_CGM->MUX_0_CSS >> 17) & 0x7) == 1));//SWTRG Switch after request succeeded
 	while(!(((MC_CGM->MUX_0_CSS >> 24) & 0xf) == 0x8));//PLL_PHI0_CLK clock has selected to perpheral buses
 	
-	//Peripheral devider aips_flat_clk
+	//need to see PCFS(1242441) & ramp_up , ramp_down
+	MC_CGM->MUX_0_DC_0 |= ((1-1) << 16);//core_clk devided by 1
+	MC_CGM->MUX_0_DC_0 |= (1 << 31);//enable the devider
 	
+	MC_CGM->MUX_0_DC_1 |= ((2-1) << 16);//aipsFlatClk devided by 2
+	MC_CGM->MUX_0_DC_1 |= (1 << 31);//enable the devider
+	
+	MC_CGM->MUX_0_DC_2 |= ((4-1) << 16);//aips_slow_clk devided by 4
+	MC_CGM->MUX_0_DC_2 |= (1 << 31);//enable the devider
+	
+	MC_CGM->MUX_0_DC_3 |= ((2-1) << 16);//hse_clk devided by 2
+	MC_CGM->MUX_0_DC_3 |= (1 << 31);//enable the devider
+	
+	MC_CGM->MUX_0_DC_4 |= ((4-1) << 16);//dcm_clk devided by 4
+	MC_CGM->MUX_0_DC_4 |= (1 << 31);//enable the devider
+	
+	MC_CGM->MUX_0_DC_5 |= ((4-1) << 16);//lbist_clk devided by 4
+	MC_CGM->MUX_0_DC_5 |= (1 << 31);//enable the devider
+	
+	MC_CGM->MUX_0_DC_6 |= ((1-1) << 16);//Qspi_mem_clk devided by 1
+	MC_CGM->MUX_0_DC_6 |= (1 << 31);//enable the devider
 }
