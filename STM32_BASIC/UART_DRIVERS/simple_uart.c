@@ -142,6 +142,15 @@ void uart_send_byte(uint8_t tx_data)
 	while(!(USART1->SR & (1 << 6)));//cheking transmission is completed or not
 }
 
+void uart_send_string(uint8_t* str,uint16_t length)
+{
+	int i = 0;
+	for(i = 0;i < length;i++)
+	{
+		uart_send_byte(str[i]);
+	}
+}
+
 void uart_interrupt_config()
 {
 	//enable tx register empty interrupt (TXEIE)
@@ -166,6 +175,18 @@ void uartIsr()//need to store this in vector table
 	{
 		
 	}
+}
+
+void stop_sending_opcodes(void)
+{
+	uint8_t flow_control_frame[] = {0x1,0x2,0x3};
+	uart_send_string(flow_control_frame,sizeof(flow_control_frame));
+}
+
+void resume_sending_opcodes(void)
+{
+	uint8_t flow_control_frame[] = {0x2,0x2,0x3};
+	uart_send_string(flow_control_frame,sizeof(flow_control_frame));
 }
 
 int main(void)
