@@ -21,6 +21,7 @@
 #include "portmacro.h"
 #include "projdefs.h"
 #include "stm32_f4xx.h"
+#include "SEGGER_SYSVIEW.h"
 
 void canTask(void* parm);
 void flashTask(void* parm);
@@ -100,6 +101,10 @@ int main(void)
     /* Loop forever */
 	clock_init();
 	gpio_init();
+
+	SEGGER_SYSVIEW_Conf();
+	SEGGER_SYSVIEW_Start();
+
 	if(taskInit() == 0)
 	{
 		vTaskStartScheduler();

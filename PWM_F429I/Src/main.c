@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include "stm32_f429xx.h"
+#include "cm4.h"
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
@@ -92,30 +93,114 @@ void TIM3_PWM_Init(void)
 }
 void set_duty_cycle(int duty_cycle)
 {
-	TIM3->CR1 &= ~(TIM_CR1_CEN); // Enable TIM3 counter
+	TIM3->CR1 &= ~(TIM_CR1_CEN); // Disable TIM3 counter
 	TIM3->CCR1 = duty_cycle;
 	TIM3->CR1 |= TIM_CR1_CEN; // Enable TIM3 counter
 }
+
+void config_rtc(void)
+{
+	RCC->APB1ENR |= (1 << 28);//enable clock to power module
+	PWR->CR |= (1 << 8);//enable access to rtc backup domain
+
+	RCC->CSR |= (1 << 0);//enable low speed internal oscillator
+	while(!(RCC->CSR & (1 << 1)));//wait until lsi ready
+
+	RCC->BDCR |= (2 << 8);//select low speed internal clock for rtc
+	RCC->BDCR |= (1 << 15);//enable rtc clock
+
+	RTC->ISR |= (1 << 7);//set 7th bit to go to initialization mode
+	while(!(RTC->ISR & (1 << 6)));//wait until the rtc enters into initialization mode
+
+	//set prescaler value for 1Hz now LSI  = 32KHz
+	RTC->PRER |= (127 << 16);
+	RTC->PRER |= (255 << 0);
+
+	//set time
+	RTC->TR |= ((2 << 16) | (12 << 8) | (30 << 0));//set 2hr 12mnt 30sec
+
+	RTC->ISR &= ~(1 << 7);//clear 7th bit to exit initialization mode
+	while(RTC->ISR & (1 << 6));//wait until the rtc exits initialization mode
+
+	PWR->CR &= ~(1 << 8);//disable access to rtc backup domain
+}
+
+void config_rtc_wakeup_interrupt(void)
+{
+	PWR->CR |= (1 << 8);//enable access to rtc backup domain
+	RTC->CR &= ~(1 << 10);//disable the wake up timer for initialize auto-reload register
+	while(!(RTC->ISR & (1 << 10)));//wait until this bit to set
+
+	//select clock for RTC wake up
+	RTC->CR &= ~(7 << 0);//RTC clock / 16 is selected
+	//config auto-reload register
+	//value 2000 for 1 sec
+	RTC->WUTR = (2000 * 5);
+	PWR->CR &= ~(1 << 8);//disable access to rtc backup domain
+	//need to enable EXTI WAKEUP interrupt line
+	EXTI->IMR |= (1 << 22);//enable wake up line 22
+	EXTI->FTSR |= (1 << 22);//rising trigger selection
+	//need to enable NVIC->SIER register to enable the interrupt
+	NVIC_SetPriority(RTC_WKUP_IRQn,2);
+	NVIC_EnableIRQ(RTC_WKUP_IRQn);
+}
+
+void gpio_init()
+{
+	//1) ENABLE GPIOG CLK
+	RCC->AHB1ENR |= (1 << 6);
+	//2) SET PIN AS OUTPUT
+	GPIOG->MODER |= (1 << 28);
+	GPIOG->MODER |= (1 << 26);
+	//3) CONFIG THE OP MODE
+	GPIOG->OTYPER = 0;
+	GPIOG->OSPEEDR = 0;
+}
+
+void set(void)
+{
+	//GPIOG->BSRR |= (1<<14);//SET THE PIN
+	GPIOG->BSRR |= (1<<13);//SET THE PIN
+}
+
+void clear(void)
+{
+	//GPIOG->BSRR |= ((1<<14)<<16);//REST PIN
+	GPIOG->BSRR |= ((1<<13)<<16);//REST PIN
+}
+
 void delay(void)
 {
-	for(int i = 0;i < 0x00002fff;i++);
-	//for(int j = 0;j < 0x0fffffff;j++);
+	int i,j;
+	for(i=10;--i;)
+	for(j=100000;j--;);
 }
 
 int main(void)
 {
-    /* Loop forever */
 
-	int i = 0;
 	config_clock();
 	TIM3_PWM_Init();
-	for(;;)
+	gpio_init();
+	for (;;)
 	{
-		set_duty_cycle(i++);
-		if(i >= 100)
-		{
-			i = 0;
-		}
+		set();
 		delay();
+		clear();
+		delay();
+
+		__asm volatile ("wfe");
+
+		while(0);
+		//set_duty_cycle(i++);
+//		if(i >= 100)
+//		{
+//			i = 0;
+//		}
+//		delay();
 	}
+}
+void RTC_WKUP_IRQHandler(void)
+{
+	while(0);
 }

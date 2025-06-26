@@ -16,7 +16,7 @@ void NVIC_init_IRQs(IRQn_Type IRQn)
 	NVIC->ICPR[(((uint32_t)(int32_t)IRQn) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)(int32_t)IRQn) & 0x1FUL));
 	NVIC->ISER[(((uint32_t)(int32_t)IRQn) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)(int32_t)IRQn) & 0x1FUL));
 }
-void PORT_init (void) 
+void PORT_init(void)
 {
  PCC->PCCn[PCC_PORTD_INDEX] = PCC_PCCn_CGC_MASK; /* Enable clock for PORT D */
  PCC->PCCn[PCC_PORTC_INDEX] = PCC_PCCn_CGC_MASK; /* Enable clock for PORT C */
@@ -38,7 +38,6 @@ void WDOG_disable (void)
 void PORTC_IRQHandler(void)
 {
 	PORTC->PCR[12] |= (1 << 24);/*clear the interupt status flag*/
-	PTD->PTOR = (1 << 0);
 }
 
 
